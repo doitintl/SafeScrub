@@ -11,7 +11,6 @@ function usage() {
   echo "script usage: $(basename "$0") -k key-file-for-service-account.json -a account-name-from-key-file -p project_id" >&2
   exit 1
 }
-
 function create_deletion_code() {
   gcloud_component=$1
   resource_types_list=$2
@@ -62,8 +61,8 @@ fi
 
 login
 
-compute_resource_types="firewall-rules forwarding-rule addresses routers routes target-tcp-proxies backend-services instance-groups managed instance-templates instances target-pools health-checks http-health-checks https-health-checks networks subnets networks"
-create_deletion_code compute ${compute_resource_types} true
+compute_resource_types="firewall-rules forwarding-rules addresses routers routes target-tcp-proxies backend-services instance-groups managed instance-templates instances target-pools health-checks http-health-checks https-health-checks networks subnets networks"
+create_deletion_code compute "${compute_resource_types}" true
 create_deletion_code container clusters false
 create_deletion_code sql instances true
 create_deletion_code app instances true
