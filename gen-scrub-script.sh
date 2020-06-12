@@ -8,7 +8,7 @@ function login() {
 }
 
 function usage() {
-  echo "script usage: $(basename "$0") -k key-file-for-service-account.json -a account-name-from-key-file -p project_id" >&2
+  echo "<script-name> -k key-file-for-service-account.json -a account-name-from-key-file -p project_id" >&2
   exit 1
 }
 function create_deletion_code() {
@@ -66,4 +66,5 @@ create_deletion_code compute "${compute_resource_types}" true
 create_deletion_code container clusters false
 create_deletion_code sql instances true
 create_deletion_code app instances true
+create_deletion_code pubsub topics true
 # TODO gsutil list
