@@ -8,7 +8,7 @@ function login() {
 }
 
 function usage() {
-  echo "<script-name> -k key-file-for-service-account.json -a account-name-from-key-file -p project_id" >&2
+  echo "./generate-script -a my-service-account@myproject.iam.gserviceaccount.com -k project-viewer-credentials.json -p  my-project"
   exit 1
 }
 function create_deletion_code() {

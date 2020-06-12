@@ -25,5 +25,6 @@ To run the deletion script immediately, just pipe output to `bash`, as  in scrip
 - Today, resources within the APIS for GCE, GKE, Cloud SQL, PubSub and App Engine are supported. (See `generate-script.sh`) If you want more, please submit a Pull Request or ticket.
 -
 ## Usage
-`./generate-script -h` for usage
+`./generate-script.sh -a my-service-account@myproject.iam.gserviceaccount.com -k project-viewer-credentials.json -p  my-project`
+
     
