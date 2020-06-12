@@ -3,8 +3,8 @@
 trap "exit" INT
 
 function login() {
-  gcloud -q auth activate-service-account "${account_name}" --key-file "${key_file}" || exit 1
-  gcloud -q config set project "${project_id}" || exit 1
+ gcloud -q auth activate-service-account "${account_name}" --key-file "${key_file}" || exit 1
+ gcloud -q config set project "${project_id}" || exit 1
 }
 
 function usage() {
@@ -28,7 +28,9 @@ function create_deletion_code() {
     resource_list="$(gcloud -q "${gcloud_component}" "${resource_type}" list ${get_uri_option})"
     [ -z "${resource_list}" ] && continue
     resource_array=()
-    echo "$resource_list" | while IFS="" read -r line; do resource_array+=("$line"); done
+   # shellcheck disable=SC2207
+   resource_array=($(echo "$resource_list" | tr ' ' '\n'))
+
     for resource_uri in "${resource_array[@]}"; do
       echo "gcloud ${gcloud_component} ${resource_type} delete -q ${resource_uri}"
     done
@@ -59,7 +61,8 @@ fi
 
 
 login
-compute_resource_types="firewall-rules" #TODO forwarding-rule addresses routers routes target-tcp-proxies backend-services instance-groups managed instance-templates instances target-pools health-checks http-health-checks https-health-checks networks subnets networks"
+
+compute_resource_types="firewall-rules forwarding-rule addresses routers routes target-tcp-proxies backend-services instance-groups managed instance-templates instances target-pools health-checks http-health-checks https-health-checks networks subnets networks"
 create_deletion_code compute ${compute_resource_types} true
 create_deletion_code container clusters false
 create_deletion_code sql instances true
