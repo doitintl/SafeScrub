@@ -8,7 +8,7 @@ function revert_authentication() {
   gcloud config set project ${original_project}
 }
 
-trap "cleanup" INT
+trap "revert_authentication" INT
 
 original_account=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 original_project=$(gcloud config get-value project)
