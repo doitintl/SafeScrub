@@ -4,7 +4,8 @@ SafeScrub  deletes the unwanted resources in your Google Cloud Platform project,
 
 ## Use case
 - It is intended for development and QA projects, where you want to start fresh at the end of the day or before a new test run.
-- It is not intended for production projects. Even with the built-in safety measures, it is too dangerous to nuke an important project.
+- It is unlikely to be useful for production projects, where you should determine the potential dependencies between components before deleting
+anything, and so should delete components individually.
 
 ## Safety First 
 To keep it safe, Safe Scrub has these features in normal mode (`generate-script.sh`).
