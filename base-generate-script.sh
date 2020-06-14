@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 
 login() {
   gcloud -q auth activate-service-account "${account_name}" --key-file "${key_file}" || exit 1
@@ -96,27 +95,31 @@ create_unfiltered_bucket_deletion_code() {
 }
 
 create_bucket_deletion_code_filtered_by_label() {
-  local filter_1 key val bucket label_match
+  local filter_1 key val bucket label_match, counter
   # At this point, we know that first 7 characters are "labels.". We remove these.
   filter_1=$(echo "${filter}" | tr -d '[:space:]' | cut -c 8-)
-  key=$(echo $filter_1 | cut -d "=" -f 1)
+  key=$(echo "$filter_1" | cut -d "=" -f 1)
+  # shellcheck disable=SC2086
   val=$(echo $filter_1 | cut -d "=" -f 2)
   echo >&2 "Will filter buckets by the label filter ${key}: ${val}"
-
+  counter=0
   for bucket in $(gsutil ls); do
     label_match=$(gsutil label get "${bucket}" | grep \""${key}\": \"${val}\"")
     if [ -n "${label_match}" ]; then
+      counter=$((counter + 1))
+
       echo "gsutil rm -r ${bucket}"
     fi
   done
-
+  echo "Listed ${counter} buckets"
 }
 
 create_bucket_deletion_code() {
   echo >&2 "Listing buckets"
-  local single_keyval
+
+  local single_keyval counter
   if [ -n "${filter}" ]; then
-    single_keyval=$(echo "${filter}" | tr -d '[:space:]' | egrep "^labels\.[a-z][a-z0-9_-]*=[a-z][a-z0-9_-]*$")
+    single_keyval=$(echo "${filter}" | tr -d '[:space:]' | grep -E "^labels\.[a-z][a-z0-9_-]*=[a-z][a-z0-9_-]*$")
     if [ -n "$single_keyval" ]; then
       create_bucket_deletion_code_filtered_by_label
       return
@@ -125,7 +128,7 @@ create_bucket_deletion_code() {
     fi
   fi
   # We do the following if there is no filter, or a filter that is not a single key equalty label filter
- create_unfiltered_bucket_deletion_code
+  create_unfiltered_bucket_deletion_code
 }
 
 while getopts 'k:p:a:f:b' OPTION; do
@@ -158,14 +161,11 @@ fi
 
 login
 
-create_bucket_deletion_code
-exit 1 # TODO remove
 create_deletion_code container clusters
-
 create_cloud_functions_deletion_code
-
 create_deletion_code pubsub "subscriptions topics snapshots"
 compute_resource_types="instances backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-groups instance-templates routers routes target-pools target-tcp-proxies networks"
 create_deletion_code compute "${compute_resource_types}"
 create_deletion_code sql instances
 create_deletion_code app "services versions instances firewall-rules" # services covers versions and instances but we want to generate a list for human review
+create_bucket_deletion_code
