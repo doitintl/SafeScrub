@@ -155,7 +155,6 @@ fi
 
 login
 
-create_bucket_deletion_code
 
 create_deletion_code container clusters
 create_cloud_functions_deletion_code
@@ -164,3 +163,5 @@ compute_resource_types="instances backend-services firewall-rules forwarding-rul
 create_deletion_code compute "${compute_resource_types}"
 create_deletion_code sql instances
 create_deletion_code app "services versions instances firewall-rules" # services covers versions and instances but we want to generate a list for human review
+
+create_bucket_deletion_code
