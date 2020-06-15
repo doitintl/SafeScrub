@@ -5,6 +5,5 @@
 # before executing them.
 ./generate-script.sh \
   -k project-viewer-credentials.json \
-  -p my-project \
-  -f "labels.key1=val1" |
+  -p joshua-playground | \
   bash
