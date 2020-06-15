@@ -7,9 +7,8 @@ login() {
 }
 
 usage() {
-  local this_script
+  local this_script supported
   this_script=$(basename "$0")
-  local supported
   supported=$(grep "^\s*create_deletion_code " "${this_script}" | cut -d " " -f2 | tr '\n' ', ' | rev | cut -c 2- | rev)
   supported="${supported} storage,functions"
 
@@ -32,22 +31,20 @@ EOD
 }
 
 create_deletion_code() {
-  local gcloud_component=$1
-  local resource_types=$2
-
+  local resource_types_array resource_types gcloud_component resources resources_array resource
+ gcloud_component=$1
+ resource_types=$2
   # shellcheck disable=SC2207
-  local resource_types_array=($(echo "$resource_types" | tr ' ' '\n'))
+  resource_types_array=($(echo "$resource_types" | tr ' ' '\n'))
   for resource_type in "${resource_types_array[@]}"; do
     echo >&2 "Listing ${gcloud_component} ${resource_type}"
-    local resources
     resources="$(gcloud -q "${gcloud_component}" "${resource_type}" list --filter "${filter}" --uri)"
-    local resources_array=()
+ resources_array=()
     # shellcheck disable=SC2207
     resources_array=($(echo "$resources" | tr ' ' '\n'))
     if [ -n "${resources}" ]; then
       echo >&2 "Listed ${#resources_array[@]} ${gcloud_component} ${resource_type}"
     fi
-    local resource
     for resource in "${resources_array[@]}"; do
       echo "gcloud ${gcloud_component} ${resource_type} delete -q ${resource} $async_ampersand"
     done
@@ -56,14 +53,13 @@ create_deletion_code() {
 
 create_cloud_functions_deletion_code() {
   echo >&2 "Listing cloud functions"
-  local funcs
+  local funcs funcs_array func
   funcs=$(gcloud -q functions list --filter "${filter}" --format="table[no-heading](name)")
   # shellcheck disable=SC2207
-  local funcs_array=($(echo "${funcs}" | tr ' ' '\n'))
+  funcs_array=($(echo "${funcs}" | tr ' ' '\n'))
   if [ -n "${funcs}" ]; then
     echo >&2 "Listed ${#funcs_array[@]} functions"
   fi
-  local func
   for func in "${funcs_array[@]}"; do
     echo "gcloud functions delete -q ${func}"
   done
@@ -80,22 +76,21 @@ function get_labeled_bucket() {
 }
 
 create_unfiltered_bucket_deletion_code() {
-  local buckets
+  local buckets buckets_array bucket
   buckets="$(gsutil ls)"
   # shellcheck disable=SC2207
-  local buckets_array=($(echo "${buckets}" | tr ' ' '\n'))
+  buckets_array=($(echo "${buckets}" | tr ' ' '\n'))
   if [ -n "${buckets}" ]; then
     echo >&2 "Listed ${#buckets_array[@]} buckets"
   fi
 
-  local bucket
   for bucket in "${buckets_array[@]}"; do
     echo "gsutil rm -r ${bucket}" # $bucket variable is in the form gs://bucketname
   done
 }
 
 create_bucket_deletion_code_filtered_by_label() {
-  local filter_1 key val bucket label_match, counter
+  local filter_1 key val bucket label_match counter
   # At this point, we know that first 7 characters are "labels.". We remove these.
   filter_1=$(echo "${filter}" | tr -d '[:space:]' | cut -c 8-)
   key=$(echo "$filter_1" | cut -d "=" -f 1)
@@ -107,7 +102,6 @@ create_bucket_deletion_code_filtered_by_label() {
     label_match=$(gsutil label get "${bucket}" | grep \""${key}\": \"${val}\"")
     if [ -n "${label_match}" ]; then
       counter=$((counter + 1))
-
       echo "gsutil rm -r ${bucket}"
     fi
   done
@@ -160,6 +154,9 @@ if [[ -z ${account_name} || (-z ${key_file} || -z ${project_id}) ]]; then
 fi
 
 login
+set -x
+create_bucket_deletion_code
+exit 1
 
 create_deletion_code container clusters
 create_cloud_functions_deletion_code
@@ -168,4 +165,3 @@ compute_resource_types="instances backend-services firewall-rules forwarding-rul
 create_deletion_code compute "${compute_resource_types}"
 create_deletion_code sql instances
 create_deletion_code app "services versions instances firewall-rules" # services covers versions and instances but we want to generate a list for human review
-create_bucket_deletion_code
