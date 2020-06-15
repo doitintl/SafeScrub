@@ -154,9 +154,8 @@ if [[ -z ${account_name} || (-z ${key_file} || -z ${project_id}) ]]; then
 fi
 
 login
-set -x
+
 create_bucket_deletion_code
-exit 1
 
 create_deletion_code container clusters
 create_cloud_functions_deletion_code
