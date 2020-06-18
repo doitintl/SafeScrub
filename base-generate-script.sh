@@ -44,7 +44,7 @@ create_deletion_code() {
       echo >&2 "Listed ${#resources_array[@]} ${gcloud_component} ${resource_type}"
     fi
     for resource in "${resources_array[@]}"; do
-      echo "gcloud ${gcloud_component} ${resource_type} delete -q ${resource} $async_ampersand"
+      echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} $async_ampersand"
     done
   done
 }
@@ -60,7 +60,7 @@ create_cloud_functions_deletion_code() {
     echo >&2 "Listed ${#funcs_array[@]} functions"
   fi
   for func in "${funcs_array[@]}"; do
-    echo "gcloud functions delete -q ${func}"
+    echo "gcloud functions delete --project ${project_id} -q ${func}"
   done
 }
 
