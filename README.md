@@ -22,7 +22,10 @@ To keep it safe, Safe Scrub has these features as you run `generate-script.sh`.
  filtering by label, name, creation date, and much more. 
    - Run `gcloud topic filters` for full documentation.
    - For Cloud Storage buckets, only simple single-key label equality filters  (`key=value1`) are supported. Otherwise, the filter is ignored.
-1. Safe Scrub supports a no-deletion list in `no-delete.txt`. Resources that have these strings in their URI will be excluded from the deletion script.
+1. Safe Scrub supports a no-deletion list in `no-delete.txt`. 
+   - Resources that have these strings in their URI will be excluded from the deletion script.
+   - To use this, run Safe Scrub, note items that should not be deleted in future, and add the given URI or an identifying part of the URI to `no-delete.txt`
+   - For Cloud Functions, the name rather than the URI is used because of a bug in `gcloud`.
 
 ## Actually deleting resources
 ### Deletion step

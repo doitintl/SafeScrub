@@ -13,12 +13,12 @@ usage() {
 
   cat <<EOD >&2
 Usage:
-./generate-script -p  my-project[-a my-service-account@myproject.iam.gserviceaccount.com] [-k project-viewer-credentials.json] [-f filter-expression] [-b]"
+./generate-script -p  my-project [-a my-service-account@myproject.iam.gserviceaccount.com] [-k project-viewer-credentials.json] [-f filter-expression] [-b]"
+  -p Project id or account
   -b (Optional.) Generate a deletion script that runs all commands asynchronously (in the background, i.e. concurrently). This will speed up deletion, but beware excess load from parallel operations.
-  -f filter expression. (Optional. The default is no filtering.) Run gcloud topics filter for documentation. This filter is not supported on Google Storage buckets except for single key=value  label filters (in the form "labels.key=val").
-  -h help
-  -k filename for credentials file. (Optional. The default value is project-viewer-credentials.json.)
-  -p project id or account
+  -f (Optional.) Filter expression. The default is no filtering. Run gcloud topics filter for documentation. This filter is not supported on Google Storage buckets except for single key=value  label filters (in the form "labels.key=val").
+  -h Help. Prints this usage text.
+  -k (Optional.) Filename for credentials file. The default value is project-viewer-credentials.json.
 
 You can direct output to create your deletion script, as for example by  suffixing
        > deletion-script.sh  && chmod a+x deletion-script.sh
@@ -52,6 +52,7 @@ create_deletion_code() {
 create_cloud_functions_deletion_code() {
   echo >&2 "Listing cloud functions"
   local funcs funcs_array func
+  # No --uri suffix because of this bug: https://issuetracker.google.com/issues/157285750
   funcs=$(gcloud -q functions list --filter "${filter}" --format="table[no-heading](name)")
   # shellcheck disable=SC2207
   funcs_array=($(echo "${funcs}" | tr ' ' '\n'))
@@ -62,6 +63,7 @@ create_cloud_functions_deletion_code() {
     echo "gcloud functions delete -q ${func}"
   done
 }
+
 function get_labeled_bucket() {
   # list all of the buckets for the current project
   for bucket in $(gsutil ls); do
@@ -158,11 +160,12 @@ fi
 login
 
 create_deletion_code sql instances
+
 compute_resource_types="instances backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-groups instance-templates routers routes target-pools target-tcp-proxies networks"
 create_deletion_code compute "${compute_resource_types}"
 create_deletion_code container clusters
-create_cloud_functions_deletion_code
 create_deletion_code pubsub "subscriptions topics snapshots"
 create_deletion_code app "services versions instances firewall-rules" # services covers versions and instances but we want to generate a list for human review
 
+create_cloud_functions_deletion_code
 create_bucket_deletion_code
