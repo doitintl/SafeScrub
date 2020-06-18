@@ -41,9 +41,16 @@ To keep it safe, Safe Scrub has these features as you run `generate-script.sh`.
 - This includes resource types from many APIs including GCE instances and firewall rules,
 PubSub topics and subscriptions, and more. 
 - For a full list of supported APIs, see the usage text. (Run  `./generate-script.sh -h`).  
-- Not necessarily all resource types in each API are supported. 
+- Not necessarily all resource types in each API are supported.
 - If you want more APIs or resource types, please submit a pull request or issue at GitHub.
 
 ## Usage
 - See `usage-example.sh`. This example shows command line options and how to generate an executable deletion script.
 - For usage text, run `./generate-script.sh -h`.
+
+
+# Other projects and approaches
+-  [GCP Cleaner](https://github.com/paulczar/gcp-cleaner/blob/master/delete-all.sh), [Travis CI GCloud Cleanup](https://github.com/travis-ci/gcloud-cleanup)  and [Bazooka](https://github.com/enxebre/bazooka)delete GCE resources. These were inspiration for Safe Scrub, which also covers other parts of GCP and adds safety features.
+-  `gcloud alpha resources list --uri |grep "projects\/$PROJECT\/"` (in alpha as of June 2020) and may provide
+  a re-implementation that truly captures all resources. Still, implementing each API explicitly, 
+  as here, may be necessary as there are slightly different deletion commmands.
