@@ -13,6 +13,6 @@ trap "revert_authentication" INT
 original_account=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 original_project=$(gcloud config get-value project)
 
-./base-generate-script.sh "$@" | grep -v -f no-delete.txt
+./base-gen-deletion-script.sh "$@" | grep -v -f no-delete.txt
 
 revert_authentication

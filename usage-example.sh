@@ -3,8 +3,7 @@
 # In this example, we send the output of the generation script into a new deletion script,
 # and set access permissions for this script to be executable.
 
-./generate-script.sh \
-  -b \
+./generate-deletion-script.sh \
   -k project-viewer-credentials.json \
   -p my-project \
   -f "labels.key1=val1" \

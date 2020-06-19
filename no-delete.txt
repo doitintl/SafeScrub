@@ -1,3 +1,5 @@
+# Any resource whose URI (or name in the case of Functions) has one of these strings in it will be filtered
+# out of the deletion script.
 firewalls/default
 networks/default
 routes/default-route

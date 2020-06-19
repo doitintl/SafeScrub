@@ -13,9 +13,9 @@ usage() {
 
   cat <<EOD >&2
 Usage:
-./generate-script -p  my-project [-a my-service-account@myproject.iam.gserviceaccount.com] [-k project-viewer-credentials.json] [-f filter-expression] [-b]"
+./generate-deletion-script -p  my-project [-a my-service-account@myproject.iam.gserviceaccount.com] [-k project-viewer-credentials.json] [-f filter-expression] [-b]"
   -p Project id or account
-  -b (Optional.) Generate a deletion script that runs all commands asynchronously (in the background, i.e. concurrently). This will speed up deletion, but beware excess load from parallel operations.
+  -b (Optional.) Generate a deletion script that runs all commands asynchronously (in the background, i.e. concurrently). This will speed up deletion, but harder to monitor; and beware excess load from parallel operations.
   -f (Optional.) Filter expression. The default is no filtering. Run gcloud topics filter for documentation. This filter is not supported on Google Storage buckets except for single key=value  label filters (in the form "labels.key=val").
   -h Help. Prints this usage text.
   -k (Optional.) Filename for credentials file. The default value is project-viewer-credentials.json.
@@ -44,7 +44,7 @@ create_deletion_code() {
       echo >&2 "Listed ${#resources_array[@]} ${gcloud_component} ${resource_type}"
     fi
     for resource in "${resources_array[@]}"; do
-      echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} $async_ampersand"
+      echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} ${async_ampersand}"
     done
   done
 }
@@ -60,7 +60,7 @@ create_cloud_functions_deletion_code() {
     echo >&2 "Listed ${#funcs_array[@]} functions"
   fi
   for func in "${funcs_array[@]}"; do
-    echo "gcloud functions delete --project ${project_id} -q ${func}"
+    echo "gcloud functions delete --project ${project_id} -q ${func} ${async_ampersand}"
   done
 }
 
@@ -85,7 +85,7 @@ create_unfiltered_bucket_deletion_code() {
   fi
 
   for bucket in "${buckets_array[@]}"; do
-    echo "gsutil rm -r ${bucket}" # $bucket variable is in the form gs://bucketname
+    echo "gsutil rm -r ${bucket} ${async_ampersand}" # $bucket variable is in the form gs://bucketname
   done
 }
 
@@ -118,7 +118,7 @@ create_bucket_deletion_code() {
       create_bucket_deletion_code_filtered_by_label
       return
     else
-      echo >&2 "Warning: Will ignore filter for storage buckets as \"${filter}\" is not a simple single-key label equality filter."
+      echo >&2 "Warning: Will ignore filter for storage buckets, because \"${filter}\" is not a simple single-key label equality filter (key=value)."
       create_unfiltered_bucket_deletion_code
     fi
   else
@@ -158,7 +158,7 @@ if [[ -z ${project_id} ]]; then
 fi
 
 login
-
+echo "set -x"
 create_deletion_code sql instances
 
 compute_resource_types="instances backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-groups instance-templates routers routes target-pools target-tcp-proxies networks"
