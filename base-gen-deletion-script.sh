@@ -8,8 +8,9 @@ login() {
 usage() {
   local this_script supported
   this_script=$(basename "$0")
-  supported=$(grep "^\s*create_deletion_code " "${this_script}" | cut -d " " -f2 | tr '\n' ', ' | rev | cut -c 2- | rev)
-  supported="${supported} storage,functions"
+  supported=$(grep "^\s*create_deletion_code " "${this_script}" | cut -d " " -f2 | tr '\n' ', ' | rev | cut -c 2- | rev | sed 's/,/, /g')
+  supported="${supported}, storage, functions"
+  unsupported=$(grep "^# TODO Implement " base-gen-deletion-script.sh | cut -d " " -f4 | tr '\n' ', ' | rev | cut -c 2- | rev | sed 's/,/, /g')
 
   cat <<EOD >&2
 Usage:
@@ -23,7 +24,8 @@ Usage:
 You can direct output to create your deletion script, as for example by  suffixing
        > deletion-script.sh  && chmod a+x deletion-script.sh
 
-Resources from these APIs are supported: ${supported}
+Resources from these services are supported: ${supported}
+These services are not supported: ${unsupported}
 EOD
   exit 1
 }
@@ -137,7 +139,7 @@ while getopts 'k:p:f:b' OPTION; do
   f)
     filter="$OPTARG"
     # Trim leading and trailing whitespace
-    filter=$(echo ${filter} | sed 's/ *$//g'|sed 's/^ *//' )
+    filter=$(echo ${filter} | sed 's/ *$//g' | sed 's/^ *//')
     ;;
   b)
     async_ampersand="&"
@@ -171,22 +173,24 @@ create_cloud_functions_deletion_code
 
 create_bucket_deletion_code
 
-# TODO BigQuery with bq tool (maybe)
-# TODO Jupyter notebooks and other ML (ml, ml-engine, ai-platform)
-# TODO composer
-# TODO datacatalog
-# TODO dataproc
-# TODO datastore (maybe)
-# TODO dns
-# TODO endpoints
-# TODO filestore
-# TODO firebase
-# TODO iam (be careful!)
-# TODO kms
-# TODO memcache (beta as of June 2020)
-# TODO monitoring dashboards etc
-# TODO redis (need to specify --region)
-# TODO scheduler
-# TODO secrets
-# TODO tasks (need to specify --region)
-
+# TODO Implement ai-platform
+# TODO Implement bq with bq tool (maybe)
+# TODO Implement composer
+# TODO Implement datacatalog
+# TODO Implement dataproc
+# TODO Implement datastore (maybe)
+# TODO Implement dataflow
+# TODO Implement dns
+# TODO Implement endpoints
+# TODO Implement filestore
+# TODO Implement firebase
+# TODO Implement iam (be careful!)
+# TODO Implement kms
+# TODO Implement memcache (beta as of June 2020)
+# TODO Implement ml
+# TODO Implement ml-engine
+# TODO Implement monitoring (dashboards etc)
+# TODO Implement redis (need to specify --region)
+# TODO Implement scheduler
+# TODO Implement secrets
+# TODO Implement tasks (need to specify --region)

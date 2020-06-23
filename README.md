@@ -19,7 +19,8 @@ To keep it safe, Safe Scrub has these features as you run `generate-deletion-scr
 1. Safe Scrub requires a JSON key file with credentials for a service account, rather than your logged-in user account. 
     - This is designed to require the conscious choice of a role to use.
     - The service account should have a role with no write capabilities, like Project Viewer. (The base script-generation script does not need or use write capabilities.)
-    - You could give a more limited role if you only want to delete resources of certain types. Safe Scrub keeps going if it cannot access some resources, as for example if the given GCP API is not enabled, or if the role of the service account does not have permissions to read these.
+    - You could give a more limited role if you only want to delete resources of certain types. Safe Scrub keeps going if it cannot access some resources, i
+    as for example if the given GCP API is not enabled, or if the role of the service account does not have permissions to read these.
 1. Safe Scrub supports a `--filter` command line option so you can choose just the resources you want,
  filtering by label, name, creation date, and much more. 
    - Run `gcloud topic filters` for full documentation.
@@ -50,7 +51,7 @@ PubSub topics and subscriptions, and more.
 - Some services that are not supported yet: DataProc, Composer, Tasks, Spanner, BigTable, BigQuery, Dataflow, ML,
 Redis, Memcache, Filestore, Scheduler, KMS, Secrets, Firebase, Data Catalog, Container Registry, 
 and IAM (though perhaps you would not want to delete IAM objects!)
-- Not necessarily all resource types in each API are supported.
+- Not necessarily all resource types in each service are supported.
 - If you want more services or resource types, please submit a pull request or issue at GitHub.
 
 ## Usage
@@ -61,5 +62,5 @@ and IAM (though perhaps you would not want to delete IAM objects!)
 - [GCP Cleaner](https://github.com/paulczar/gcp-cleaner/blob/master/delete-all.sh), [Travis CI GCloud Cleanup](https://github.com/travis-ci/gcloud-cleanup)  and [Bazooka](https://github.com/enxebre/bazooka)delete GCE resources. These were inspiration for Safe Scrub, which also covers other parts of GCP and adds safety features.
 - [Cloud Nuke](https://blog.gruntwork.io/cloud-nuke-how-we-reduced-our-aws-bill-by-85-f3aced4e5876) does this for AWS.
 -  `gcloud alpha resources list --uri |grep "projects\/$PROJECT\/"` (in alpha as of June 2020) and may provide
-  a re-implementation that truly captures all resources. Still, implementing each API explicitly, 
+  a re-implementation that truly captures all resources. Still, implementing each service explicitly, 
   as here, may be necessary as there are slightly different deletion commands.
