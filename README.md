@@ -48,7 +48,8 @@ concurrently. This is faster, but harder to track, and risks overloading systems
 PubSub topics and subscriptions, and more. 
 - For a full list of supported services, see the usage text. (Run  `./generate-deletion-script.sh -h`).  
 - Some services that are not supported yet: DataProc, Composer, Tasks, Spanner, BigTable, BigQuery, Dataflow, ML,
-Container Registry, and IAM (though perhaps you would not want to delete IAM objects!)
+Redis, Memcache, Filestore, Scheduler, KMS, Secrets, Firebase, Data Catalog, Container Registry, 
+and IAM (though perhaps you would not want to delete IAM objects!)
 - Not necessarily all resource types in each API are supported.
 - If you want more services or resource types, please submit a pull request or issue at GitHub.
 

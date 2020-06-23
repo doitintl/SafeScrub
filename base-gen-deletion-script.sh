@@ -168,4 +168,25 @@ create_deletion_code pubsub "subscriptions topics snapshots"
 create_deletion_code app "services versions instances firewall-rules" # services covers versions and instances but we want to generate a list for human review
 
 create_cloud_functions_deletion_code
+
 create_bucket_deletion_code
+
+# TODO BigQuery with bq tool (maybe)
+# TODO Jupyter notebooks and other ML (ml, ml-engine, ai-platform)
+# TODO composer
+# TODO datacatalog
+# TODO dataproc
+# TODO datastore (maybe)
+# TODO dns
+# TODO endpoints
+# TODO filestore
+# TODO firebase
+# TODO iam (be careful!)
+# TODO kms
+# TODO memcache (beta as of June 2020)
+# TODO monitoring dashboards etc
+# TODO redis (need to specify --region)
+# TODO scheduler
+# TODO secrets
+# TODO tasks (need to specify --region)
+
