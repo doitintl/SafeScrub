@@ -6,7 +6,7 @@ leaving it clean of confusing clutter and saving you money.
 ## Use case
 - It is intended for development and QA projects, where you want to start fresh at the end of the day or before a new test run.
 - It is unlikely to be useful for production projects, where you should determine the potential dependencies between components before deleting
-anything.
+anything. 
 
 ## Safety First 
 To keep it safe, Safe Scrub has these features as you run `generate-deletion-script.sh`.
