@@ -163,7 +163,7 @@ login
 echo "set -x"
 create_deletion_code sql instances
 
-compute_resource_types="instances backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates routers routes target-pools target-tcp-proxies networks"
+compute_resource_types="instances addresses backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates routers routes target-pools target-tcp-proxies networks"
 create_deletion_code compute "${compute_resource_types}"
 create_deletion_code container clusters
 create_deletion_code pubsub "subscriptions topics snapshots"
