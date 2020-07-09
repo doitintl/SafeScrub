@@ -166,7 +166,7 @@ if [[ -z ${project_id} ]]; then
 fi
 
 login
-
+echo "set -x"
 compute_resource_types="instances addresses backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates networks routes routers target-pools target-tcp-proxies"
 create_deletion_code compute "${compute_resource_types}" "true"
 # Use name, not URI, because of issue https://issuetracker.google.com/issues/160846601
