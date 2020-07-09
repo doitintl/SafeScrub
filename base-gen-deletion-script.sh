@@ -9,7 +9,7 @@ usage() {
   local this_script supported
   this_script=$(basename "$0")
   supported=$(grep "^\s*create_deletion_code " "${this_script}" | cut -d " " -f2 | tr '\n' ', ' | rev | cut -c 2- | rev | sed 's/,/, /g')
-  supported="${supported}, storage, functions"
+  supported="${supported}, storage"
   unsupported=$(grep "^# TODO Implement " base-gen-deletion-script.sh | cut -d " " -f4 | tr '\n' ', ' | rev | cut -c 2- | rev | sed 's/,/, /g')
 
   cat <<EOD >&2
@@ -30,15 +30,34 @@ EOD
   exit 1
 }
 
+
+# Generates the deletion code.
+# Params are
+# $1. gcloud_component (service, like compute or sql)
+# $2. resource types as a space-seperated string, e.g. "instnaces routes addresses". Can be a single string or an empty string (no resource types, as in Cloud Fnctions)
+# $3. if the URI is to be used in the deletion command; otherwise the resource name will be used.
 create_deletion_code() {
   local resource_types_array resource_types gcloud_component resources resources_array resource
   gcloud_component=$1
   resource_types=$2
-  # shellcheck disable=SC2207
-  resource_types_array=($(echo "$resource_types" | tr ' ' '\n'))
+  use_uri=$3
+  if [ "${use_uri}" == "true" ]; then
+    identifier_option="--uri"
+  else
+    # shellcheck disable=SC2089
+    identifier_option="--format=table[no-heading](name)"
+  fi
+  if [ -z "${resource_types}" ]; then
+    resource_types_array=("")
+  else
+    # shellcheck disable=SC2207
+    resource_types_array=($(echo "$resource_types" | tr ' ' '\n'))
+  fi
   for resource_type in "${resource_types_array[@]}"; do
     echo >&2 "Listing ${gcloud_component} ${resource_type}"
-    resources="$(gcloud -q "${gcloud_component}" "${resource_type}" list --filter "${filter}" --uri)"
+
+    # No double-quote around ${resource} type because it may be an empty string and so a param that we wish to omit rather than treat as a param with value ""
+    resources="$(gcloud -q "${gcloud_component}" ${resource_type} list --filter "${filter}" "${identifier_option}")"
     resources_array=()
     # shellcheck disable=SC2207
     resources_array=($(echo "$resources" | tr ' ' '\n'))
@@ -46,24 +65,11 @@ create_deletion_code() {
       echo >&2 "Listed ${#resources_array[@]} ${gcloud_component} ${resource_type}"
     fi
     for resource in "${resources_array[@]}"; do
+     # No double-quote around ${resource} type because it may be an empty string and so a param that we wish to omit rather than treat as a param with value ""
       echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} ${async_ampersand}"
     done
   done
-}
 
-create_cloud_functions_deletion_code() {
-  echo >&2 "Listing cloud functions"
-  local funcs funcs_array func
-  # No --uri suffix because of this bug: https://issuetracker.google.com/issues/157285750
-  funcs=$(gcloud -q functions list --filter "${filter}" --format="table[no-heading](name)")
-  # shellcheck disable=SC2207
-  funcs_array=($(echo "${funcs}" | tr ' ' '\n'))
-  if [ -n "${funcs}" ]; then
-    echo >&2 "Listed ${#funcs_array[@]} functions"
-  fi
-  for func in "${funcs_array[@]}"; do
-    echo "gcloud functions delete --project ${project_id} -q ${func} ${async_ampersand}"
-  done
 }
 
 function get_labeled_bucket() {
@@ -160,20 +166,21 @@ if [[ -z ${project_id} ]]; then
 fi
 
 login
-echo "set -x"
-create_deletion_code sql instances
 
-compute_resource_types="instances addresses backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates routers routes target-pools target-tcp-proxies networks"
-create_deletion_code compute "${compute_resource_types}"
-create_deletion_code container clusters
-create_deletion_code pubsub "subscriptions topics snapshots"
-create_deletion_code app "services versions instances firewall-rules" # services covers versions and instances but we want to generate a list for human review
-
-create_cloud_functions_deletion_code
-
+compute_resource_types="instances addresses backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates networks routes routers target-pools target-tcp-proxies"
+create_deletion_code compute "${compute_resource_types}" "true"
+# Use name, not URI, because of issue https://issuetracker.google.com/issues/160846601
+create_deletion_code sql instances "false"
+create_deletion_code container clusters "true"
+create_deletion_code app "services firewall-rules" "true" # services covers versions and instances but we want to generate a list for human review
+create_deletion_code pubsub "subscriptions topics snapshots" "true"
+# Use name, not URI, because of issue https://issuetracker.google.com/issues/157285750
+create_deletion_code functions "" "false"
 create_bucket_deletion_code
 
+
 # TODO Implement ai-platform
+# TODO Implement app versions and instances. Use Version/Instance name, not uri, and add option --service.
 # TODO Implement bq with bq tool (maybe)
 # TODO Implement composer
 # TODO Implement datacatalog
@@ -190,6 +197,12 @@ create_bucket_deletion_code
 # TODO Implement ml
 # TODO Implement ml-engine
 # TODO Implement monitoring (dashboards etc)
+# TODO Implement networks (gcloud compute networks subnets,peerings, and maybe vpc-access).
+#      This is useful as you cannot delete a VPC until you delete its subnets.
+#      Note that this is the first subresource-type (i.e. four words in the structure gcloud x y z)
+#      and so create_deletion_code will need to reflect that.
+#      Also, though you do not need to specify --region in list command, you do need to add it to the
+#      delete command
 # TODO Implement redis (need to specify --region)
 # TODO Implement scheduler
 # TODO Implement secrets

@@ -12,7 +12,10 @@ trap "revert_authentication" INT
 
 original_account=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 original_project=$(gcloud config get-value project)
+exclusions_file=exclusions.txt
+# If exclusions.txt file is empty, add a comment. This is to prevent grep -v -f from failing the whole script
+grep -q '[^[:space:]]' < "${exclusions_file}" || echo "# No excluded resources" > ${exclusions_file}
 
-./base-gen-deletion-script.sh "$@" | grep -v -f exclusions.txt
+./base-gen-deletion-script.sh "$@" | grep -v -f ${exclusions_file}
 
 revert_authentication

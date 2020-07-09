@@ -3,6 +3,9 @@
 Safe Scrub helps you delete the unwanted resources in your Google Cloud Platform project, 
 leaving it clean of confusing clutter and saving you money.
 
+# Article
+See the article at the [DoiT](https://blog.doit-intl.com) for full details.
+
 ## Use case
 - It is intended for development and QA projects, where you want to start fresh at the end of the day or before a new test run.
 - It is unlikely to be useful for production projects, where you should determine the potential dependencies between components before deleting
@@ -51,7 +54,8 @@ PubSub topics and subscriptions, and more.
 - Some services that are not supported yet: DataProc, Composer, Tasks, Spanner, BigTable, BigQuery, Dataflow, ML,
 Redis, Memcache, Filestore, Scheduler, KMS, Secrets, Firebase, Data Catalog, Container Registry, 
 and IAM (though perhaps you would not want to delete IAM objects!)
-- Not necessarily all resource types in each service are supported.
+- Not necessarily all resource types in each service are supported. Anything that 
+requires a `--region` specification is not yet supported.
 - If you want more services or resource types, please submit a pull request or issue at GitHub.
 
 ## Usage
