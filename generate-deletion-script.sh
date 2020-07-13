@@ -18,7 +18,7 @@ trap "revert" INT
 original_account=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 original_project=$(gcloud config get-value project)
 
-# Remove blank lines from exclusions.txt as these would cause everything to be excluded
+# Remove blank lines from exclusions.txt, as these would cause everything to be excluded
 grep -e "\S" ${exclusions_file} > ${temp_exclusions_file}
 
 # If exclusions.txt file is empty, add a comment. This is to prevent grep -v -f from failing the whole script
