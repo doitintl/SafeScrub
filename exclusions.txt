@@ -4,8 +4,10 @@
 
 default
 
-# The following are redundant given the above, but illustrate
+# Some of the following are redundant given the above, but illustrate
 # how to exclude default firewalls, routes, or networks.
 firewalls/default
 networks/default
 routes/default-route
+
+firewalls/allow-iap

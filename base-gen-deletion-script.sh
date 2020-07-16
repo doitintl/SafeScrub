@@ -178,7 +178,7 @@ create_deletion_code pubsub "subscriptions topics snapshots" "true"
 create_deletion_code functions "" "false"
 create_bucket_deletion_code
 
-
+# TODO More services, as follows
 # TODO Implement ai-platform
 # TODO Implement app versions and instances. Use Version/Instance name, not uri, and add option --service.
 # TODO Implement bq with bq tool (maybe)
@@ -197,14 +197,15 @@ create_bucket_deletion_code
 # TODO Implement ml
 # TODO Implement ml-engine
 # TODO Implement monitoring (dashboards etc)
-# TODO Implement networks (gcloud compute networks subnets,peerings, and maybe vpc-access).
+# TODO Implement redis (need to specify --region)
+# TODO Implement scheduler
+# TODO Implement secrets
+# TODO Implement tasks (need to specify --region)
+# TODO More resource types inside each service.
+#  For example,in compute: instance groups and
+#  networks -- vpc, subnets, peerings, and vpc-access including vpc-access connectors.
 #      This is useful as you cannot delete a VPC until you delete its subnets.
 #      Note that this is the first subresource-type (i.e. four words in the structure gcloud x y z)
 #      and so create_deletion_code will need to reflect that.
 #      Also, though you do not need to specify --region in list command, you do need to add it to the
 #      delete command
-# TODO Implement redis (need to specify --region)
-# TODO Implement scheduler
-# TODO Implement secrets
-# TODO Implement tasks (need to specify --region)
-# TODO More resource types inside each service. For example, instance groups within GCE need to be handled.
