@@ -1,6 +1,7 @@
 # Any resource whose URI (or name in the case of Functions and Cloud SQL instances)
-# has one of these strings in it, it will be filtered out of the deletion script.
-# Blank lines in this file will be removed
+# has one of these strings in it will be filtered out of the deletion script.
+#
+# Blank lines are ignored.
 
 default
 

@@ -4,7 +4,7 @@ Safe Scrub helps you delete the unwanted resources in your Google Cloud Platform
 leaving it clean of confusing clutter and saving you money.
 
 # Article
-See [the article](https://blog.doit-intl.com/safe-scrub-clean-up-your-google-cloud-projects-f90f18aca311)
+See [the blog post](https://blog.doit-intl.com/safe-scrub-clean-up-your-google-cloud-projects-f90f18aca311)
 for an explanation.
 
 ## Use case
