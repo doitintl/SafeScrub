@@ -64,7 +64,8 @@ requires a `--region` specification is not yet supported.
 - For usage text, run `./generate-deletion-script.sh -h`.
 
 # Other projects and approaches
-- [GCP Cleaner](https://github.com/paulczar/gcp-cleaner/blob/master/delete-all.sh), [Travis CI GCloud Cleanup](https://github.com/travis-ci/gcloud-cleanup)  and [Bazooka](https://github.com/enxebre/bazooka)delete GCE resources. These were inspiration for Safe Scrub, which also covers other parts of GCP and adds safety features.
+- [GCP Cleaner](https://github.com/paulczar/gcp-cleaner/blob/master/delete-all.sh), 
+[Travis CI GCloud Cleanup](https://github.com/travis-ci/gcloud-cleanup) and [Bazooka](https://github.com/enxebre/bazooka) also delete GCE resources.
 - [Cloud Nuke](https://blog.gruntwork.io/cloud-nuke-how-we-reduced-our-aws-bill-by-85-f3aced4e5876) does this for AWS.
 -  `gcloud alpha resources list --uri |grep "projects\/$PROJECT\/"` (in alpha as of June 2020) and may provide
   a re-implementation that truly captures all resources. Still, implementing each service explicitly, 
