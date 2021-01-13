@@ -10,5 +10,7 @@ default
 firewalls/default
 networks/default
 routes/default-route
-
+firewalls/allow-gateway-http
+firewalls/allow-gateway-https
+firewalls/allow-https
 firewalls/allow-iap
