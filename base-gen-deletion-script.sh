@@ -30,7 +30,6 @@ EOD
   exit 1
 }
 
-
 # Generates the deletion code.
 # Params are
 # $1. gcloud_component (service, like compute or sql)
@@ -65,8 +64,14 @@ create_deletion_code() {
       echo >&2 "Listed ${#resources_array[@]} ${gcloud_component} ${resource_type}"
     fi
     for resource in "${resources_array[@]}"; do
-     # No double-quote around ${resource} type because it may be an empty string and so a param that we wish to omit rather than treat as a param with value ""
-      echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} ${async_ampersand}"
+      # container clusters requires location/zone argument
+      if [ "${resource_type}" == "clusters" ]; then
+        [[ ${resource} =~ (zone|location)s/(.+)/clusters ]] && extra_args="--${BASH_REMATCH[1] ${BASH_REMATCH[2]}"
+      else
+        extra_args=""
+      fi
+      # No double-quote around ${resource} type because it may be an empty string and so a param that we wish to omit rather than treat as a param with value ""
+      echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} ${extra_args} ${async_ampersand}"
     done
   done
 
@@ -167,11 +172,11 @@ fi
 
 login
 echo "set -x"
-compute_resource_types="instances addresses backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates networks routes routers target-pools target-tcp-proxies"
+create_deletion_code container clusters "true"
+compute_resource_types="instances addresses target-http-proxies target-https-proxies target-grpc-proxies url-maps backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates networks routes routers target-pools target-tcp-proxies"
 create_deletion_code compute "${compute_resource_types}" "true"
 # Use name, not URI, because of issue https://issuetracker.google.com/issues/160846601
 create_deletion_code sql instances "false"
-create_deletion_code container clusters "true"
 create_deletion_code app "services firewall-rules" "true" # services covers versions and instances but we want to generate a list for human review
 create_deletion_code pubsub "subscriptions topics snapshots" "true"
 # Use name, not URI, because of issue https://issuetracker.google.com/issues/157285750
@@ -209,3 +214,4 @@ create_bucket_deletion_code
 #      and so create_deletion_code will need to reflect that.
 #      Also, though you do not need to specify --region in list command, you do need to add it to the
 #      delete command
+
