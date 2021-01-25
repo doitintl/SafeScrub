@@ -4,11 +4,11 @@ exclusions_file=exclusions.txt
 temp_exclusions_file="${exclusions_file}.tmp"
 
 # Calls the base script, and also
-# 1. Directs the output through a filter so that items in  "exclusions.txt" are not in the ultimate output script
+# 1. Directs the output through a filter so that items in "exclusions.txt" are not in the ultimate output script
 # 2. On exit, reverts the logged-in user to what it was before the script is run.
 function revert() {
-  gcloud config set account "${original_account}"
-  gcloud config set project "${original_project}"
+  [ -n "${original_account}" ] && gcloud config set account "${original_account}"
+  [ -n "${original_project}" ] && gcloud config set project "${original_project}"
 
   rm ${temp_exclusions_file} ||true
 }
@@ -27,3 +27,4 @@ grep -q '[^[:space:]]' <"${temp_exclusions_file}" || echo "# No excluded resourc
 ./base-gen-deletion-script.sh "$@" | grep -v -f ${temp_exclusions_file}
 
 revert
+

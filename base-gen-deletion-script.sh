@@ -30,7 +30,6 @@ EOD
   exit 1
 }
 
-
 # Generates the deletion code.
 # Params are
 # $1. gcloud_component (service, like compute or sql)
@@ -65,8 +64,14 @@ create_deletion_code() {
       echo >&2 "Listed ${#resources_array[@]} ${gcloud_component} ${resource_type}"
     fi
     for resource in "${resources_array[@]}"; do
-     # No double-quote around ${resource} type because it may be an empty string and so a param that we wish to omit rather than treat as a param with value ""
-      echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} ${async_ampersand}"
+      # container clusters requires location/zone argument
+      if [ "${resource_type}" == "clusters" ]; then
+        [[ ${resource} =~ (zone|location)s/(.+)/clusters ]] && extra_args="--${BASH_REMATCH[1] ${BASH_REMATCH[2]}"
+      else
+        extra_args=""
+      fi
+      # No double-quote around ${resource} type because it may be an empty string and so a param that we wish to omit rather than treat as a param with value ""
+      echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} ${extra_args} ${async_ampersand}"
     done
   done
 
@@ -166,15 +171,13 @@ if [[ -z ${project_id} ]]; then
 fi
 
 login
-echo "set -x"
-# There are dependencies:
-# url-maps must be deleted before backend-services
-# backend-services must be deleted before health-check
-compute_resource_types="url-maps instances addresses backend-buckets backend-services disks \
-firewall-rules forwarding-rules health-checks http-health-checks https-health-checks \
-networks routes routers target-pools \
-target-http-proxies target-https-proxies target-tcp-proxies"
+create_deletion_code container clusters "true"
 
+# There are dependencies between compute results.
+# url-maps must be deleted before backend-services
+# backend-services must be deleted before health-check.
+
+compute_resource_types="url-maps instances addresses target-http-proxies target-https-proxies target-grpc-proxies backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates networks routes routers target-pools target-tcp-proxies"
 create_deletion_code compute "${compute_resource_types}" "true"
 # Use name, not URI, because of issue https://issuetracker.google.com/issues/160846601
 create_deletion_code sql instances "false"
@@ -209,10 +212,10 @@ create_bucket_deletion_code
 # TODO Implement secrets
 # TODO Implement tasks (need to specify --region)
 # TODO More resource types inside each service.
-#  For example, in compute: instance groups and
+#  For example,in compute: instance groups and
 #  networks -- vpc, subnets, peerings, and vpc-access including vpc-access connectors.
 #      This is useful as you cannot delete a VPC until you delete its subnets.
 #      Note that this is the first subresource-type (i.e. four words in the structure gcloud x y z)
 #      and so create_deletion_code will need to reflect that.
 #      Also, though you do not need to specify --region in list command, you do need to add it to the
-#      delete command.
+#      delete command
