@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 exclusions_file=exclusions.txt
 temp_exclusions_file="${exclusions_file}.tmp"
@@ -9,11 +9,10 @@ temp_exclusions_file="${exclusions_file}.tmp"
 function revert() {
   [ -n "${original_account}" ] && gcloud config set account "${original_account}"
   [ -n "${original_project}" ] && gcloud config set project "${original_project}"
-
   rm ${temp_exclusions_file} ||true
 }
 
-trap "revert" INT
+trap "revert" EXIT
 
 original_account=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
 original_project=$(gcloud config get-value project)

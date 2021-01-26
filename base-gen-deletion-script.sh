@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 login() {
   gcloud -q auth activate-service-account --key-file "${key_file}" || exit 1
@@ -34,16 +34,15 @@ EOD
 # Params are
 # $1. gcloud_component (service, like compute or sql)
 # $2. resource types as a space-seperated string, e.g. "instnaces routes addresses". Can be a single string or an empty string (no resource types, as in Cloud Fnctions)
-# $3. if the URI is to be used in the deletion command; otherwise the resource name will be used.
+# $3. "true" if the URI, rather than the name, is to be retrieved in the listing of resources.
 create_deletion_code() {
   local resource_types_array resource_types gcloud_component resources resources_array resource
   gcloud_component=$1
   resource_types=$2
-  use_uri=$3
-  if [ "${use_uri}" == "true" ]; then
+  use_uri_in_list_command=$3
+  if [ "${use_uri_in_list_command}" == "true" ]; then
     identifier_option="--uri"
   else
-    # shellcheck disable=SC2089
     identifier_option="--format=table[no-heading](name)"
   fi
   if [ -z "${resource_types}" ]; then
@@ -55,7 +54,8 @@ create_deletion_code() {
   for resource_type in "${resource_types_array[@]}"; do
     echo >&2 "Listing ${gcloud_component} ${resource_type}"
 
-    # No double-quote around ${resource} type because it may be an empty string and so a param that we wish to omit rather than treat as a param with value ""
+    # No double-quote around ${resource} type, because it may be an empty string. If so, we wish to omit it rather than treat it as a real param with empty value.
+    # shellcheck disable=SC2086
     resources="$(gcloud -q "${gcloud_component}" ${resource_type} list --filter "${filter}" "${identifier_option}")"
     resources_array=()
     # shellcheck disable=SC2207
@@ -64,14 +64,31 @@ create_deletion_code() {
       echo >&2 "Listed ${#resources_array[@]} ${gcloud_component} ${resource_type}"
     fi
     for resource in "${resources_array[@]}"; do
-      # container clusters requires location/zone argument
+      extra_flag=""
+      extra_flagvalue=""
+
+      # This is special code for clusters, the only resource which requires regional/zonal values that we now support.
+      # The code should be refactored as we support more regional/zonal commands.
+      #
+      # We list clusters with --uri in order to parse out that region/zone value.
+      # However, regional clusters cannot be deleted by full URI, so we replace the URI with resource name.
       if [ "${resource_type}" == "clusters" ]; then
-        [[ ${resource} =~ (zone|location)s/(.+)/clusters ]] && extra_args="--${BASH_REMATCH[1] ${BASH_REMATCH[2]}"
-      else
-        extra_args=""
+        if [[ "${resource}" =~ "zones" ]]; then
+          extra_flag="--zone"
+          extra_flagvalue=$(echo "${resource}" | grep -o 'zones\/[a-z1-9-].*\/clusters' | cut -d'/' -f 2)
+          # Zonal clusters can be deleted by URI, but there is a bug with regional so we keep it consistent
+          resource=$(echo "${resource}"| rev | cut -d'/' -f 1| rev)
+        fi
+        if [[ "${resource}" =~ "locations" ]]; then
+          extra_flag="--region"
+          extra_flagvalue=$(echo "${resource}" | grep -o 'locations\/[a-z0-9-].*\/clusters' | cut -d'/' -f 2)
+          # The delete command cannot accept the full URI for regional clusters
+          resource=$(echo "${resource}"| rev | cut -d'/' -f 1| rev)
+        fi
       fi
+
       # No double-quote around ${resource} type because it may be an empty string and so a param that we wish to omit rather than treat as a param with value ""
-      echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} ${extra_args} ${async_ampersand}"
+      echo "gcloud ${gcloud_component} ${resource_type} delete --project ${project_id} -q ${resource} ${extra_flag} ${extra_flagvalue} ${async_ampersand}"
     done
   done
 
@@ -137,8 +154,8 @@ create_bucket_deletion_code() {
   else
     create_unfiltered_bucket_deletion_code
   fi
-
 }
+
 while getopts 'k:p:f:b' OPTION; do
   case "$OPTION" in
   k)
@@ -150,9 +167,10 @@ while getopts 'k:p:f:b' OPTION; do
   f)
     filter="$OPTARG"
     # Trim leading and trailing whitespace
-    filter=$(echo ${filter} | sed 's/ *$//g' | sed 's/^ *//')
+    filter=$(echo "${filter}" | sed 's/ *$//g' | sed 's/^ *//')
     ;;
   b)
+    #Could use gcloud flag --async instead
     async_ampersand="&"
     ;;
   ?)
@@ -171,26 +189,28 @@ if [[ -z ${project_id} ]]; then
 fi
 
 login
+
+# Add set -x to the file we create for easier tracking when it is run.
+echo "set -x"
+# Use URI in listing (but use the name in deletion)  https://issuetracker.google.com/issues/178462287
 create_deletion_code container clusters "true"
 
-# There are dependencies between compute results.
-# url-maps must be deleted before backend-services
-# backend-services must be deleted before health-check.
-
-compute_resource_types="url-maps instances addresses target-http-proxies target-https-proxies target-grpc-proxies backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates networks routes routers target-pools target-tcp-proxies"
+compute_resource_types="instances addresses target-http-proxies target-https-proxies target-grpc-proxies url-maps backend-services firewall-rules forwarding-rules health-checks http-health-checks https-health-checks instance-templates networks routes routers target-pools target-tcp-proxies"
 create_deletion_code compute "${compute_resource_types}" "true"
-# Use name, not URI, because of issue https://issuetracker.google.com/issues/160846601
+# List by  name, not URI, because of issue https://issuetracker.google.com/issues/160846601
 create_deletion_code sql instances "false"
-create_deletion_code container clusters "true"
 create_deletion_code app "services firewall-rules" "true" # services covers versions and instances but we want to generate a list for human review
 create_deletion_code pubsub "subscriptions topics snapshots" "true"
-# Use name, not URI, because of issue https://issuetracker.google.com/issues/157285750
+# List by name, not URI, because of issue https://issuetracker.google.com/issues/157285750
 create_deletion_code functions "" "false"
 create_bucket_deletion_code
 
-# TODO More services, as follows
+# Implement more services, as follows
+# TODO Anything that requires --region and --zone.
+#     Currently this is only implemented for GKE
 # TODO Implement ai-platform
-# TODO Implement app versions and instances. Use Version/Instance name, not uri, and add option --service.
+# TODO Implement app (App Engine) versions and instances.
+#     Use Version/Instance name, not uri, and add option --service.
 # TODO Implement bq with bq tool (maybe)
 # TODO Implement composer
 # TODO Implement datacatalog
@@ -203,7 +223,7 @@ create_bucket_deletion_code
 # TODO Implement firebase
 # TODO Implement iam (be careful!)
 # TODO Implement kms
-# TODO Implement memcache (beta as of June 2020)
+# TODO Implement memcache (beta as of 1.2021)
 # TODO Implement ml
 # TODO Implement ml-engine
 # TODO Implement monitoring (dashboards etc)
@@ -212,10 +232,7 @@ create_bucket_deletion_code
 # TODO Implement secrets
 # TODO Implement tasks (need to specify --region)
 # TODO More resource types inside each service.
-#  For example,in compute: instance groups and
-#  networks -- vpc, subnets, peerings, and vpc-access including vpc-access connectors.
-#      This is useful as you cannot delete a VPC until you delete its subnets.
-#      Note that this is the first subresource-type (i.e. four words in the structure gcloud x y z)
-#      and so create_deletion_code will need to reflect that.
-#      Also, though you do not need to specify --region in list command, you do need to add it to the
-#      delete command
+# TODO More subresources. For example:
+#      Instance groups, vpc, subnets, peerings, vpc-access, and vpc-access connectors.
+#      Create_deletion_code will need to reflect subresource-type (i.e. four words in the structure gcloud x y z).
+#      And although you do not need to specify --region in list command, you do need to add it to the delete command
