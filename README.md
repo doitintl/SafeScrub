@@ -7,6 +7,9 @@ leaving it clean of confusing clutter and saving you money.
 See [the blog post](https://blog.doit-intl.com/safe-scrub-clean-up-your-google-cloud-projects-f90f18aca311)
 for an explanation.
 
+# Newer project
+As of October 2021, please see [Cloud Blaster](https://github.com/doitintl/CloudBlaster), coded in Kotlin and so more robust.
+
 ## Use case
 - It is intended for development and QA projects, where you want to start fresh at the end of the day or before a new test run.
 - It is unlikely to be useful for production projects, where you should determine the potential dependencies between components before deleting
