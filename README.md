@@ -1,5 +1,4 @@
 # Safe Scrub
-
 Safe Scrub helps you delete the unwanted resources in your Google Cloud Platform project, 
 leaving it clean of confusing clutter and saving you money.
 
@@ -7,8 +6,9 @@ leaving it clean of confusing clutter and saving you money.
 See [the blog post](https://blog.doit-intl.com/safe-scrub-clean-up-your-google-cloud-projects-f90f18aca311)
 for an explanation.
 
-# Newer project
-As of October 2021, please see [Cloud Blaster](https://github.com/doitintl/CloudBlaster), coded in Kotlin and so more robust.
+# Another project 
+* See also [Cloud Blaster](https://github.com/doitintl/CloudBlaster), coded in Kotlin and so more flexible to further development.
+* SafeScrub has the advantage of being pure Bash, and so more directly viewable, editable, and adaptable.
 
 ## Use case
 - It is intended for development and QA projects, where you want to start fresh at the end of the day or before a new test run.
